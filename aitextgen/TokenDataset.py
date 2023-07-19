@@ -290,7 +290,7 @@ def encode_tokens_from_file(
         leave=True,
         dynamic_ncols=True,
     )
-    tokens = np.full((num_texts, 1), -1, dtype=a_dtype)
+    tokens = np.empty( shape=(0), dtype=a_dtype )
     num_batches = 0
 
     with open(file_path, "r", encoding="utf-8", newline=newline) as f_load:
@@ -327,23 +327,12 @@ def encode_tokens_from_file(
                 return_attention_mask=False,
             )["input_ids"]
 
-            for i, encoded_text in enumerate(encoded_texts):
-                if len(encoded_text) > tokens.shape[1]:
-                    cols_to_add = len(encoded_text) - tokens.shape[1]
-                    tokens = np.concatenate(
-                        (
-                            tokens,
-                            np.full(
-                                (num_texts, cols_to_add),
-                                -1,
-                                dtype=a_dtype,
-                            ),
-                        ),
-                        axis=1,
-                    )
-                tokens[
-                    (num_batches * batch_size) + i, : len(encoded_text)
-                ] = encoded_text
+            batch_tokens = np.empty( shape=(0), dtype=a_dtype )
+
+            for _, encoded_text in enumerate(encoded_texts):
+                batch_tokens = np.append(batch_tokens, np.array(encoded_text, dtype=a_dtype))
+
+            tokens = np.append(tokens, batch_tokens)
 
             num_batches += 1
 
@@ -353,8 +342,7 @@ def encode_tokens_from_file(
     pbar.n = num_texts
     pbar.refresh()
     pbar.close()
-    tokens = tokens.flatten()
-    return tokens[tokens < np.array(-1, dtype=a_dtype)]
+    return tokens
 
 
 def encode_tokens_from_list(
@@ -378,7 +366,7 @@ def encode_tokens_from_list(
         leave=True,
         dynamic_ncols=True,
     )
-    tokens = np.full((len(texts), 1), -1, dtype=a_dtype)
+    tokens = np.empty( shape=(0), dtype=a_dtype )
 
     for i_start in range(num_texts // batch_size + 1):
         batch = [
@@ -395,21 +383,12 @@ def encode_tokens_from_list(
             return_attention_mask=False,
         )["input_ids"]
 
-        for i, encoded_text in enumerate(encoded_texts):
-            if len(encoded_text) > tokens.shape[1]:
-                cols_to_add = len(encoded_text) - tokens.shape[1]
-                tokens = np.concatenate(
-                    (
-                        tokens,
-                        np.full(
-                            (num_texts, cols_to_add),
-                            -1,
-                            dtype=a_dtype,
-                        ),
-                    ),
-                    axis=1,
-                )
-            tokens[(i_start * batch_size) + i, : len(encoded_text)] = encoded_text
+        batch_tokens = np.empty( shape=(0), dtype=a_dtype )
+
+        for _, encoded_text in enumerate(encoded_texts):
+            batch_tokens = np.append(batch_tokens, np.array(encoded_text, dtype=a_dtype))
+
+        tokens = np.append(tokens, batch_tokens)
 
         if i_start % progress_bar_refresh_rate == 0:
             pbar.update(batch_size * progress_bar_refresh_rate)
@@ -417,8 +396,7 @@ def encode_tokens_from_list(
     pbar.n = num_texts
     pbar.refresh()
     pbar.close()
-    tokens = tokens.flatten()
-    return tokens[tokens < np.array(-1, dtype=a_dtype)]
+    return tokens
 
 
 def merge_datasets(datasets: List[TokenDataset], equalize: bool = True) -> TokenDataset:
