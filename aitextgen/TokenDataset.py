@@ -342,6 +342,7 @@ def encode_tokens_from_file(
     pbar.n = num_texts
     pbar.refresh()
     pbar.close()
+    logger.info(f"Encoded {tokens.size:,} total tokens from {file_path}.")
     return tokens
 
 
@@ -353,7 +354,7 @@ def encode_tokens_from_list(
     batch_size: int = 1024,
 ) -> List[int]:
     """
-    Retrieves texts from a newline-delimited file/CSV and returns texts.
+    Encodes given texts into tokens.
     """
 
     num_texts = len(texts)
@@ -396,6 +397,7 @@ def encode_tokens_from_list(
     pbar.n = num_texts
     pbar.refresh()
     pbar.close()
+    logger.info(f"Encoded {tokens.size:,} total tokens.")
     return tokens
 
 
